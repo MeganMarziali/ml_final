@@ -1,27 +1,31 @@
 ---
-title: "Homework 9"
+title: "Machine Learning Final"
 author: "Megan Marziali"
-date: "3/17/2021"
-output: word_document
+date: "3/25/2021"
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(caret)
+library(rpart.plot)
+library(Amelia)
+library(arsenal)
 ```
 
-# Question 1
+# Part 2: Choose your own supervised adventure
+
+## Research question
+
+The goal of this analysis is to generate hypotheses regarding social capital, nutrient intake and toxic metals during pregnancy on child externalizing and internalizing behaviors. This hypotheses generating analysis will guide future research on the role of social capital, nutrient intake, toxic metals and potential interactions between these features on child behaviors.
 
 ## Loading and preparing data
 
 Loading data into single data frame.
 
 ```{r dataprep, message = FALSE, warning = FALSE}
-library(tidyverse)
-library(caret)
-library(rpart.plot)
-library(Amelia)
-library(arsenal)
-
 #Load data using path of where file is stored
 load("./data/exposome.RData")
 
@@ -35,80 +39,84 @@ studydata =
 studydata$ID = NULL
 ```
 
-Data cleaning, and removing non-modifiable variables from the possible features.
+Data cleaning and selecting relevant features to research question.
 
 ```{r message = FALSE, warning = FALSE}
-data.rec  = studydata %>% 
-  janitor::clean_names() %>% 
+studydata  = studydata %>% 
+  select(e3_alcpreg_yn_None,
+         h_cereal_preg_Ter,
+         h_dairy_preg_Ter,
+         h_fastfood_preg_Ter,
+         h_fish_preg_Ter,
+         h_folic_t1_None,
+         h_fruit_preg_Ter,
+         h_legume_preg_Ter,
+         h_meat_preg_Ter,
+         h_veg_preg_Ter,
+         hs_as_m_Log2,
+         hs_cd_m_Log2,
+         hs_co_m_Log2,
+         hs_cs_m_Log2,
+         hs_cu_m_Log2,
+         hs_hg_m_Log2,
+         hs_mn_m_Log2,
+         hs_mo_m_Log2,
+         hs_pb_m_Log2,
+         hs_tl_mdich_None,
+         hs_dde_madj_Log2,
+         hs_ddt_madj_Log2,
+         hs_hcb_madj_Log2,
+         hs_pcb118_madj_Log2,
+         hs_pcb138_madj_Log2,
+         hs_pcb153_madj_Log2,
+         hs_pcb170_madj_Log2,
+         hs_pcb180_madj_Log2,
+         hs_sumPCBs5_madj_Log2,
+         hs_dep_madj_Log2,
+         hs_detp_madj_Log2,
+         hs_dmp_madj_Log2,
+         hs_dmtp_madj_Log2,
+         hs_pbde153_madj_Log2,
+         hs_pbde47_madj_Log2,
+         hs_pfhxs_m_Log2,
+         hs_pfna_m_Log2,
+         hs_pfoa_m_Log2,
+         hs_pfos_m_Log2,
+         hs_pfunda_m_Log2,
+         hs_bpa_madj_Log2,
+         hs_bupa_madj_Log2,
+         hs_etpa_madj_Log2,
+         hs_mepa_madj_Log2,
+         hs_oxbe_madj_Log2,
+         hs_prpa_madj_Log2,
+         hs_trcs_madj_Log2,
+         hs_mbzp_madj_Log2,
+         hs_mecpp_madj_Log2,
+         hs_mehhp_madj_Log2,
+         hs_mehp_madj_Log2,
+         hs_meohp_madj_Log2,
+         hs_mep_madj_Log2,
+         hs_mibp_madj_Log2,
+         hs_mnbp_madj_Log2,
+         hs_ohminp_madj_Log2,
+         hs_oxominp_madj_Log2,
+         hs_sumDEHP_madj_Log2,
+         hs_cotinine_mcat_None,
+         FAS_cat_None,
+         hs_contactfam_3cat_num_None,
+         hs_hm_pers_None,
+         hs_participation_3cat_None,
+         hs_Gen_Tot
+         ) 
+
+data.rec = studydata %>% 
   mutate(
-    hs_asthma = as.factor(hs_asthma)
+    behav = cut(hs_Gen_Tot, 
+                breaks = c(-Inf, 60, Inf),
+                labels = c("0", "1"))
   ) %>% 
-  select(-h_accesslines300_preg_dic0,
-         -h_accesspoints300_preg_log,
-         -h_builtdens300_preg_sqrt,
-         -h_connind300_preg_sqrt,
-         -h_fdensity300_preg_log,
-         -h_frichness300_preg_none,
-         -h_landuseshan300_preg_none,
-         -h_popdens_preg_sqrt,
-         -hs_accesslines300_h_dic0,
-         -h_walkability_mean_preg_none,
-         -hs_accesspoints300_h_log,
-         -hs_builtdens300_h_sqrt,
-         -hs_connind300_h_log,
-         -hs_fdensity300_h_log,
-         -hs_landuseshan300_h_none,
-         -hs_popdens_h_sqrt,
-         -hs_walkability_mean_h_none,
-         -hs_accesslines300_s_dic0,
-         -hs_accesspoints300_s_log,
-         -hs_builtdens300_s_sqrt,
-         -hs_connind300_s_log,
-         -hs_fdensity300_s_log,
-         -hs_landuseshan300_s_none,
-         -hs_popdens_s_sqrt,
-         -h_humidity_preg_none,
-         -h_pressure_preg_none,
-         -h_temperature_preg_none,
-         -hs_hum_mt_hs_h_none,
-         -hs_tm_mt_hs_h_none,
-         -hs_uvdvf_mt_hs_h_none,
-         -hs_hum_dy_hs_h_none,
-         -hs_hum_wk_hs_h_none,
-         -hs_tm_dy_hs_h_none,
-         -hs_tm_wk_hs_h_none,
-         -hs_uvdvf_dy_hs_h_none,
-         -hs_uvdvf_wk_hs_h_none,
-         -hs_blueyn300_s_none,
-         -h_blueyn300_preg_none,
-         -h_greenyn300_preg_none,
-         -h_ndvi100_preg_none,
-         -hs_greenyn300_s_none,
-         -hs_blueyn300_h_none,
-         -hs_greenyn300_h_none,
-         -hs_ndvi100_h_none,
-         -hs_ndvi100_s_none,
-         -h_lden_cat_preg_none,
-         -hs_ln_cat_h_none,
-         -hs_lden_cat_s_none,
-         -h_distinvnear1_preg_log,
-         -h_trafload_preg_pow1over3,
-         -h_trafnear_preg_pow1over3,
-         -hs_trafload_h_pow1over3,
-         -hs_trafnear_h_pow1over3,
-         -hs_gen_tot,
-         -hs_c_height_none,
-         -hs_c_weight_none,
-         -e3_gac_none,
-         -e3_sex_none,
-         -e3_yearbir_none,
-         -h_age_none,
-         -h_cohort,
-         -h_parity_none,
-         -hs_child_age_none,
-         -hs_zbmi_who,
-         -hs_correct_raven,
-         -hs_bmi_c_cat)
+  select(-hs_Gen_Tot) %>% 
+  select(everything(), behav)
 ```
 
 Data exploration.
