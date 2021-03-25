@@ -1,0 +1,204 @@
+---
+title: "Homework 9"
+author: "Megan Marziali"
+date: "3/17/2021"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+
+## Loading and preparing data
+
+Loading data into single data frame.
+
+```{r dataprep, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(caret)
+library(rpart.plot)
+library(Amelia)
+library(arsenal)
+
+#Load data using path of where file is stored
+load("./data/exposome.RData")
+
+#Merge all data frames into a single data frame. FYI, this is just a shortcut by combining baseR with piping from tidyverse. There are other ways of merging across three data frames that are likely more elegant.
+
+studydata = 
+  merge(exposome,phenotype,by = "ID") %>% 
+  merge(covariates, by = "ID")
+
+#Strip off ID Variable
+studydata$ID = NULL
+```
+
+Data cleaning, and removing non-modifiable variables from the possible features.
+
+```{r message = FALSE, warning = FALSE}
+data.rec  = studydata %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    hs_asthma = as.factor(hs_asthma)
+  ) %>% 
+  select(-h_accesslines300_preg_dic0,
+         -h_accesspoints300_preg_log,
+         -h_builtdens300_preg_sqrt,
+         -h_connind300_preg_sqrt,
+         -h_fdensity300_preg_log,
+         -h_frichness300_preg_none,
+         -h_landuseshan300_preg_none,
+         -h_popdens_preg_sqrt,
+         -hs_accesslines300_h_dic0,
+         -h_walkability_mean_preg_none,
+         -hs_accesspoints300_h_log,
+         -hs_builtdens300_h_sqrt,
+         -hs_connind300_h_log,
+         -hs_fdensity300_h_log,
+         -hs_landuseshan300_h_none,
+         -hs_popdens_h_sqrt,
+         -hs_walkability_mean_h_none,
+         -hs_accesslines300_s_dic0,
+         -hs_accesspoints300_s_log,
+         -hs_builtdens300_s_sqrt,
+         -hs_connind300_s_log,
+         -hs_fdensity300_s_log,
+         -hs_landuseshan300_s_none,
+         -hs_popdens_s_sqrt,
+         -h_humidity_preg_none,
+         -h_pressure_preg_none,
+         -h_temperature_preg_none,
+         -hs_hum_mt_hs_h_none,
+         -hs_tm_mt_hs_h_none,
+         -hs_uvdvf_mt_hs_h_none,
+         -hs_hum_dy_hs_h_none,
+         -hs_hum_wk_hs_h_none,
+         -hs_tm_dy_hs_h_none,
+         -hs_tm_wk_hs_h_none,
+         -hs_uvdvf_dy_hs_h_none,
+         -hs_uvdvf_wk_hs_h_none,
+         -hs_blueyn300_s_none,
+         -h_blueyn300_preg_none,
+         -h_greenyn300_preg_none,
+         -h_ndvi100_preg_none,
+         -hs_greenyn300_s_none,
+         -hs_blueyn300_h_none,
+         -hs_greenyn300_h_none,
+         -hs_ndvi100_h_none,
+         -hs_ndvi100_s_none,
+         -h_lden_cat_preg_none,
+         -hs_ln_cat_h_none,
+         -hs_lden_cat_s_none,
+         -h_distinvnear1_preg_log,
+         -h_trafload_preg_pow1over3,
+         -h_trafnear_preg_pow1over3,
+         -hs_trafload_h_pow1over3,
+         -hs_trafnear_h_pow1over3,
+         -hs_gen_tot,
+         -hs_c_height_none,
+         -hs_c_weight_none,
+         -e3_gac_none,
+         -e3_sex_none,
+         -e3_yearbir_none,
+         -h_age_none,
+         -h_cohort,
+         -h_parity_none,
+         -hs_child_age_none,
+         -hs_zbmi_who,
+         -hs_correct_raven,
+         -hs_bmi_c_cat)
+```
+
+Data exploration.
+
+```{r message = FALSE, warning = FALSE, results = "asis"}
+# Investigating missing data
+missmap(studydata)
+
+# No missingness observed.
+
+# Exploring continuous/categorical variables of interest
+table.1 = tableby(~ hs_asthma + hs_no2_wk_hs_h_log + h_pm_log +
+                    h_folic_t1_none + fas_cat_none + hs_hm_pers_none + hs_participation_3cat_none,
+                  data = data.rec,
+        numeric.stats = c("mean","median", "range"))
+summary(table.1, text = TRUE)
+```
+
+I chose to explore a few variables related to asthma and air pollution, including NO2 concentration (mean: 2.86, median: 2.98; range: 0.95 - 4.81). I also opted to explore concentration of particulate matter (mean: 2.44; median: 2.30; range: 1.55 - 5.24). Within this sample, 53.4% (N=695) of mothers consumed folic acid during pregnancy. 51.4% (N=669) of mothers scored high on the family affluence score. The median number of people leaving in the home was 4 (range: 1-10). The majority (57.5%, N=748) of mothers did not participate in any organizations.
+
+Partitioning data.
+
+```{r message = FALSE, warning = FALSE}
+set.seed(100)
+
+#Partition data for use in demonstration
+train.indices = createDataPartition(y = data.rec$hs_asthma, p = 0.7,list = FALSE)
+training = data.rec[train.indices, ]
+testing = data.rec[-train.indices, ]
+```
+
+# Question 2
+
+## Developing research question
+
+Given available data, and the number of features, my research question of interest will be hypothesis generating. This analysis will aim to determine potential risk factors of asthma at 6-11 years old.
+
+# Question 3
+
+## Using LASSO for feature selection
+
+```{r, warning = FALSE, message = FALSE}
+set.seed(100)
+
+#Create grid to search lambda
+lambda = 10^seq(-3,3, length = 100)
+
+lasso.m = train(
+  hs_asthma ~., 
+  data = training, 
+  method = "glmnet", 
+  trControl = trainControl("cv", number = 10, sampling = "down"), 
+  tuneGrid = expand.grid(alpha = 0, lambda = lambda)
+)
+
+#Print the values of alpha and lambda that gave best prediction
+lasso.m$bestTune
+
+#Print all of the options examined
+lasso.m$results
+
+# Model coefficients
+coef(lasso.m$finalModel, lasso.m$bestTune$lambda)
+varImp(lasso.m)
+
+# Make predictions
+pred.lasso = predict(lasso.m, training)
+pred.lasso.prob = predict(lasso.m, training, type = "prob")
+
+# Model prediction performance
+eval.results = confusionMatrix(pred.lasso, training$hs_asthma, positive = "1")
+print(eval.results)
+
+#Accuracy of this model is 0.62
+```
+
+## Final accuracy testing
+
+```{r message = FALSE, warning = FALSE}
+set.seed(100)
+
+# Using best fit model from above with testing data
+pred.lasso.f = predict(lasso.m, testing)
+pred.lasso.f.prob = predict(lasso.m, testing, type = "prob")
+
+# Evaluating in testing data with confusion matrix
+eval.results = confusionMatrix(pred.lasso.f, testing$hs_asthma, positive = "1")
+print(eval.results)
+```
+
+Final accuracy testing shows that the accuracy of this model is 0.59.
+
+Risk factors show that undetectable thallium levels in the mother is the most important predictor, which tells me that something about this model isn't quite right. Other important predictors of asthma show that PM25 absorbance the year before the examination, fruit and vegetable intake, and PM absorbance.
