@@ -19,7 +19,7 @@ library(arsenal)
 
 ## Research question
 
-The goal of this analysis is to generate hypotheses regarding social capital, nutrient intake and toxic metals during pregnancy on child externalizing and internalizing behaviors. This hypotheses generating analysis will guide future research on the role of social capital, nutrient intake, toxic metals and potential interactions between these features on child behaviors.
+The goal of this analysis is to generate hypotheses regarding social capital, nutrient intake and toxic metals during pregnancy on child externalizing and internalizing behaviors. This hypotheses generating analysis will guide future research on the role of social capital on child behaviors, and whether interactions between nutrient intake and toxic metals are salient for child behaviors.
 
 ## Loading and preparing data
 
@@ -128,14 +128,14 @@ missmap(studydata)
 # No missingness observed.
 
 # Exploring continuous/categorical variables of interest
-table.1 = tableby(~ hs_asthma + hs_no2_wk_hs_h_log + h_pm_log +
-                    h_folic_t1_none + fas_cat_none + hs_hm_pers_none + hs_participation_3cat_none,
+table.1 = tableby(~ behav + FAS_cat_None + hs_contactfam_3cat_num_None +
+                    hs_sumDEHP_madj_Log2 + hs_ohminp_madj_Log2 + hs_mibp_madj_Log2 + hs_mehp_madj_Log2,
                   data = data.rec,
         numeric.stats = c("mean","median", "range"))
 summary(table.1, text = TRUE)
 ```
 
-I chose to explore a few variables related to asthma and air pollution, including NO2 concentration (mean: 2.86, median: 2.98; range: 0.95 - 4.81). I also opted to explore concentration of particulate matter (mean: 2.44; median: 2.30; range: 1.55 - 5.24). Within this sample, 53.4% (N=695) of mothers consumed folic acid during pregnancy. 51.4% (N=669) of mothers scored high on the family affluence score. The median number of people leaving in the home was 4 (range: 1-10). The majority (57.5%, N=748) of mothers did not participate in any organizations.
+The data is unbalanced.
 
 Partitioning data.
 
@@ -143,18 +143,10 @@ Partitioning data.
 set.seed(100)
 
 #Partition data for use in demonstration
-train.indices = createDataPartition(y = data.rec$hs_asthma, p = 0.7,list = FALSE)
+train.indices = createDataPartition(y = data.rec$behav, p = 0.7,list = FALSE)
 training = data.rec[train.indices, ]
 testing = data.rec[-train.indices, ]
 ```
-
-# Question 2
-
-## Developing research question
-
-Given available data, and the number of features, my research question of interest will be hypothesis generating. This analysis will aim to determine potential risk factors of asthma at 6-11 years old.
-
-# Question 3
 
 ## Using LASSO for feature selection
 
@@ -165,7 +157,7 @@ set.seed(100)
 lambda = 10^seq(-3,3, length = 100)
 
 lasso.m = train(
-  hs_asthma ~., 
+  behav ~., 
   data = training, 
   method = "glmnet", 
   trControl = trainControl("cv", number = 10, sampling = "down"), 
@@ -187,7 +179,7 @@ pred.lasso = predict(lasso.m, training)
 pred.lasso.prob = predict(lasso.m, training, type = "prob")
 
 # Model prediction performance
-eval.results = confusionMatrix(pred.lasso, training$hs_asthma, positive = "1")
+eval.results = confusionMatrix(pred.lasso, training$behav, positive = "1")
 print(eval.results)
 
 #Accuracy of this model is 0.62
@@ -203,10 +195,10 @@ pred.lasso.f = predict(lasso.m, testing)
 pred.lasso.f.prob = predict(lasso.m, testing, type = "prob")
 
 # Evaluating in testing data with confusion matrix
-eval.results = confusionMatrix(pred.lasso.f, testing$hs_asthma, positive = "1")
+eval.results = confusionMatrix(pred.lasso.f, testing$behav, positive = "1")
 print(eval.results)
 ```
 
-Final accuracy testing shows that the accuracy of this model is 0.59.
+Final accuracy testing shows that the accuracy of this model is 0.63.
 
-Risk factors show that undetectable thallium levels in the mother is the most important predictor, which tells me that something about this model isn't quite right. Other important predictors of asthma show that PM25 absorbance the year before the examination, fruit and vegetable intake, and PM absorbance.
+
