@@ -48,20 +48,37 @@ I restricted the data to variables which assessed fdietary patterns during pregn
 missmap(diet.data, main = "Missing values vs observed")
 ```
 
-I used missmap to determine if there are any missing observations, which there are not.
+I used missmap to determine if there are any missing observations, which there are not. To determine clusters within the data, a hierarchical cluster analysis with the complete linkage method will be carried out.
 
 ```{r}
+set.seed(100)
+
 # Create Dissimilarity matrix
 diss.matrix = dist(diet.data, method = "euclidean")
-```
 
-```{r}
 #Identifying the optimal number of clusters given complete linkage method
-set.seed(100)
 gap_stat_c = clusGap(diet.data, FUN = hcut, hc_method = "complete", K.max = 10, B = 50)
 fviz_gap_stat(gap_stat_c)
+
+#Characterizing the clusters
+clusters.c = hcut(diet.data, k = 2, hc_func = "hclust", hc_method = "complete", hc_metric = "euclidian")
+
+clusters.c$size
+fviz_dend(clusters.c, rect = TRUE)
+fviz_cluster(clusters.c)
 ```
 
+The optimal number of clusters within this data is *2* clusters. There are 840 observations in the first cluster, and 461 observations in the second cluster.
+
+```{r}
+input.feature.vals = cbind(diet.data, cluster = clusters.c$cluster)
+input.feature.vals %>%
+ group_by(cluster) %>%
+ summarise_all(mean) %>% 
+  knitr::kable()
+```
+
+The first cluster has less cereal consumed during pregnancy by mothers than the second cluster; respondents also consumed slightly more dairy, fast food, and fish. Those in the second cluster consumed more cereal and slightly more fruit and meats. Both clusters consumed approximately the same amount of vegetables.
 
 # Part 2: Choose your own supervised adventure
 
