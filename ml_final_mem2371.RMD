@@ -13,7 +13,48 @@ library(caret)
 library(rpart.plot)
 library(Amelia)
 library(arsenal)
+
+set.seed(100)
 ```
+
+# Part 1: Dietary patterns using unsupervised analysis
+
+## Question 1: Construct a research question
+
+The goal of this unsupervised analysis will be to develop classes of dietary patterns among women during pregnancy. These classes will be used as an exposure in future analyses, aiming to predict whether dietary patterns during pregnancy are predictive of postpartum mental health systems (such as post-partum depression). This is a predictive research question.
+
+## Question 2: Running appropriate unsupervised analysis
+
+```{r}
+diet.data = 
+  read.csv("./data/diet_data.csv", header=TRUE) %>% 
+  select(
+    "h_cereal_preg_Ter",
+    "h_dairy_preg_Ter",
+    "h_fastfood_preg_Ter",
+    "h_fish_preg_Ter",
+    "h_fruit_preg_Ter",
+    "h_legume_preg_Ter",
+    "h_meat_preg_Ter",
+    "h_veg_preg_Ter",
+  )
+
+```
+
+I restricted the data to variables which assessed fdietary patterns during pregnancy. The total dataset is comprised of 1301 observations, and 8 variables.
+
+```{r}
+missmap(diet.data, main = "Missing values vs observed")
+```
+
+I used missmap to determine if there are any missing observations, which there are not.
+
+```{r}
+# Create Dissimilarity matrix
+diss.matrix = dist(us_arrest, method = "euclidean")
+```
+
+
 
 # Part 2: Choose your own supervised adventure
 
