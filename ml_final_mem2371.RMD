@@ -13,6 +13,8 @@ library(caret)
 library(rpart.plot)
 library(Amelia)
 library(arsenal)
+library(factoextra)
+library(cluster)
 
 set.seed(100)
 ```
@@ -27,7 +29,7 @@ The goal of this unsupervised analysis will be to develop classes of dietary pat
 
 ```{r}
 diet.data = 
-  read.csv("./data/diet_data.csv", header=TRUE) %>% 
+  read.csv("./data/diet_data.csv", header = TRUE) %>% 
   select(
     "h_cereal_preg_Ter",
     "h_dairy_preg_Ter",
@@ -38,7 +40,6 @@ diet.data =
     "h_meat_preg_Ter",
     "h_veg_preg_Ter",
   )
-
 ```
 
 I restricted the data to variables which assessed fdietary patterns during pregnancy. The total dataset is comprised of 1301 observations, and 8 variables.
@@ -51,9 +52,15 @@ I used missmap to determine if there are any missing observations, which there a
 
 ```{r}
 # Create Dissimilarity matrix
-diss.matrix = dist(us_arrest, method = "euclidean")
+diss.matrix = dist(diet.data, method = "euclidean")
 ```
 
+```{r}
+#Identifying the optimal number of clusters given complete linkage method
+set.seed(100)
+gap_stat_c = clusGap(diet.data, FUN = hcut, hc_method = "complete", K.max = 10, B = 50)
+fviz_gap_stat(gap_stat_c)
+```
 
 
 # Part 2: Choose your own supervised adventure
