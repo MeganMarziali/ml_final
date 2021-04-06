@@ -40,6 +40,10 @@ diet.data =
     "h_meat_preg_Ter",
     "h_veg_preg_Ter",
   )
+
+# Scaling data
+colMeans(diet.data, na.rm = TRUE)
+apply(diet.data, 2, sd, na.rm = TRUE)
 ```
 
 I restricted the data to variables which assessed fdietary patterns during pregnancy. The total dataset is comprised of 1301 observations, and 8 variables.
@@ -84,7 +88,7 @@ The first cluster has less cereal consumed during pregnancy by mothers than the 
 
 ## Research question
 
-The goal of this analysis is to generate hypotheses regarding social capital, nutrient intake and toxic metals during pregnancy on child externalizing and internalizing behaviors. This hypotheses generating analysis will guide future research on the role of social capital on child behaviors, and whether interactions between nutrient intake and toxic metals are salient for child behaviors.
+The goal of this analysis is to generate hypotheses regarding social capital and toxic metals during pregnancy on child externalizing and internalizing behaviors. This hypotheses generating analysis will guide future research on the role of social capital on child behaviors, and whether interactions between social capital and toxic metals are salient for child behaviors. This is being done to generate hypotheses regarding the importance of both the built environment and the social environment on child well-being, and to gain a better understanding of how these factors interact in relation to child health outcomes.
 
 ## Loading and preparing data
 
@@ -108,17 +112,7 @@ Data cleaning and selecting relevant features to research question.
 
 ```{r message = FALSE, warning = FALSE}
 studydata  = studydata %>% 
-  select(e3_alcpreg_yn_None,
-         h_cereal_preg_Ter,
-         h_dairy_preg_Ter,
-         h_fastfood_preg_Ter,
-         h_fish_preg_Ter,
-         h_folic_t1_None,
-         h_fruit_preg_Ter,
-         h_legume_preg_Ter,
-         h_meat_preg_Ter,
-         h_veg_preg_Ter,
-         hs_as_m_Log2,
+  select(hs_as_m_Log2,
          hs_cd_m_Log2,
          hs_co_m_Log2,
          hs_cs_m_Log2,
@@ -200,7 +194,7 @@ table.1 = tableby(~ behav + FAS_cat_None + hs_contactfam_3cat_num_None +
 summary(table.1, text = TRUE)
 ```
 
-The data is unbalanced.
+The data is unbalanced, which will be taken into account by down-sampling.
 
 Partitioning data.
 
@@ -213,7 +207,9 @@ training = data.rec[train.indices, ]
 testing = data.rec[-train.indices, ]
 ```
 
-## Using LASSO for feature selection
+## First Algorithm: Using LASSO for Feature Selection
+
+Hyperparameter tuning and initial accuracy testing.
 
 ```{r, warning = FALSE, message = FALSE}
 set.seed(100)
@@ -221,7 +217,7 @@ set.seed(100)
 #Create grid to search lambda
 lambda = 10^seq(-3,3, length = 100)
 
-lasso.m = train(
+lasso.m1 = train(
   behav ~., 
   data = training, 
   method = "glmnet", 
@@ -230,40 +226,76 @@ lasso.m = train(
 )
 
 #Print the values of alpha and lambda that gave best prediction
-lasso.m$bestTune
+lasso.m1$bestTune
 
 #Print all of the options examined
-lasso.m$results
+lasso.m1$results
 
 # Model coefficients
-coef(lasso.m$finalModel, lasso.m$bestTune$lambda)
-varImp(lasso.m)
+coef(lasso.m1$finalModel, lasso.m1$bestTune$lambda)
+varImp(lasso.m1)
 
 # Make predictions
-pred.lasso = predict(lasso.m, training)
-pred.lasso.prob = predict(lasso.m, training, type = "prob")
+pred.lasso.1 = predict(lasso.m1, training)
+pred.lasso.prob.1 = predict(lasso.m1, training, type = "prob")
 
 # Model prediction performance
-eval.results = confusionMatrix(pred.lasso, training$behav, positive = "1")
+eval.results = confusionMatrix(pred.lasso.1, training$behav, positive = "1")
 print(eval.results)
 
-#Accuracy of this model is 0.62
+#Accuracy of this model is 0.65
 ```
 
-## Final accuracy testing
+## Second Algorithm: Elastic Net
+
+```{r}
+set.seed(100)
+
+alpha = seq(0,1, length = 100)
+
+en.m = train(
+  behav ~., 
+  data = training, 
+  method = "glmnet", 
+  trControl = trainControl("cv", number = 10, sampling = "down"), 
+  tuneGrid = expand.grid(alpha = alpha, lambda = lambda)
+)
+
+#Print the values of alpha and lambda that gave best prediction
+en.m$bestTune
+
+#Print all of the options examined
+en.m$results
+
+# Model coefficients
+coef(en.m$finalModel, en.m$bestTune$lambda)
+varImp(en.m)
+
+# Make predictions
+pred.en = predict(en.m, training)
+pred.en.prob = predict(en.m, training, type = "prob")
+
+# Model prediction performance
+eval.results = confusionMatrix(pred.en, training$behav, positive = "1")
+print(eval.results)
+
+#Accuracy of this model is 0.58
+```
+
+Given that the LASSO model produced slightly better accuracy than the elastic net model, the LASSO model will be used for final accuracy testing.
+
+### Final accuracy testing
 
 ```{r message = FALSE, warning = FALSE}
 set.seed(100)
 
 # Using best fit model from above with testing data
-pred.lasso.f = predict(lasso.m, testing)
-pred.lasso.f.prob = predict(lasso.m, testing, type = "prob")
+pred.lasso.f = predict(lasso.m.1, testing)
+pred.lasso.f.prob = predict(lasso.m.1, testing, type = "prob")
 
 # Evaluating in testing data with confusion matrix
 eval.results = confusionMatrix(pred.lasso.f, testing$behav, positive = "1")
 print(eval.results)
 ```
 
-Final accuracy testing shows that the accuracy of this model is 0.63.
-
-
+Final accuracy testing shows that the accuracy of the LASSO model is 0.62.
