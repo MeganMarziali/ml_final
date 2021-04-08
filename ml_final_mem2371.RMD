@@ -2,7 +2,7 @@
 title: "Machine Learning Final"
 author: "Megan Marziali"
 date: "3/25/2021"
-output: github_document
+output: word_document
 ---
 
 ```{r setup, include=FALSE}
