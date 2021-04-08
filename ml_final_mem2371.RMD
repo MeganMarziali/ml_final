@@ -23,11 +23,13 @@ set.seed(100)
 
 ## Question 1: Construct a research question
 
-The goal of this unsupervised analysis will be to develop classes of dietary patterns among women during pregnancy. These classes will be used as an exposure in future analyses, aiming to predict whether dietary patterns during pregnancy are predictive of postpartum mental health systems (such as post-partum depression). This is a predictive research question.
+Research question: Do dietary patterns during pregnancy predict postpartum mental health symptoms?
+
+The goal of this unsupervised analysis will be to develop classes of dietary patterns among women during pregnancy. These classes will be used as an exposure in future analyses, aiming to predict whether dietary patterns during pregnancy are predictive of postpartum mental health symptoms (such as postpartum depression). This is a predictive research question.
 
 ## Question 2: Running appropriate unsupervised analysis
 
-```{r}
+```{r message = FALSE, results = FALSE, warning = FALSE}
 diet.data = 
   read.csv("./data/diet_data.csv", header = TRUE) %>% 
   select(
@@ -44,24 +46,26 @@ diet.data =
 # Scaling data
 colMeans(diet.data, na.rm = TRUE)
 apply(diet.data, 2, sd, na.rm = TRUE)
+
+scale(diet.data, center = TRUE, scale = TRUE)
 ```
 
-I restricted the data to variables which assessed fdietary patterns during pregnancy. The total dataset is comprised of 1301 observations, and 8 variables.
+I restricted the data to variables which assessed dietary patterns during pregnancy. The total dataset is comprised of 1301 observations, and 8 variables.
 
-```{r}
+```{r message = FALSE, warning = FALSE}
 missmap(diet.data, main = "Missing values vs observed")
 ```
 
 I used missmap to determine if there are any missing observations, which there are not. To determine clusters within the data, a hierarchical cluster analysis with the complete linkage method will be carried out.
 
-```{r}
+```{r message = FALSE, warning = FALSE}
 set.seed(100)
 
 # Create Dissimilarity matrix
 diss.matrix = dist(diet.data, method = "euclidean")
 
 #Identifying the optimal number of clusters given complete linkage method
-gap_stat_c = clusGap(diet.data, FUN = hcut, hc_method = "complete", K.max = 10, B = 50)
+gap_stat_c = clusGap(diet.data, FUN = hcut, hc_method = "complete", K.max = 10, B = 5)
 fviz_gap_stat(gap_stat_c)
 
 #Characterizing the clusters
@@ -74,7 +78,7 @@ fviz_cluster(clusters.c)
 
 The optimal number of clusters within this data is *2* clusters. There are 840 observations in the first cluster, and 461 observations in the second cluster.
 
-```{r}
+```{r message = FALSE, warning = FALSE}
 input.feature.vals = cbind(diet.data, cluster = clusters.c$cluster)
 input.feature.vals %>%
  group_by(cluster) %>%
@@ -88,7 +92,7 @@ The first cluster has less cereal consumed during pregnancy by mothers than the 
 
 ## Research question
 
-The goal of this analysis is to generate hypotheses regarding social capital and toxic metals during pregnancy on child externalizing and internalizing behaviors. This hypotheses generating analysis will guide future research on the role of social capital on child behaviors, and whether interactions between social capital and toxic metals are salient for child behaviors. This is being done to generate hypotheses regarding the importance of both the built environment and the social environment on child well-being, and to gain a better understanding of how these factors interact in relation to child health outcomes.
+The goal of this analysis is to generate hypotheses regarding dietary patterns and toxic metals during pregnancy on child externalizing and internalizing behaviors. This hypotheses generating analysis will guide future research on the role of nutrition on child behaviors, and whether interactions between dietary patterns and toxic metals are salient for child behaviors. This is being done to generate hypotheses regarding the importance of both toxins in the built environment and maternal nutrition on child well-being, and to gain a better understanding of how these factors interact in relation to child health outcomes.
 
 ## Loading and preparing data
 
@@ -98,21 +102,26 @@ Loading data into single data frame.
 #Load data using path of where file is stored
 load("./data/exposome.RData")
 
-#Merge all data frames into a single data frame. FYI, this is just a shortcut by combining baseR with piping from tidyverse. There are other ways of merging across three data frames that are likely more elegant.
-
 studydata = 
   merge(exposome,phenotype,by = "ID") %>% 
   merge(covariates, by = "ID")
 
-#Strip off ID Variable
 studydata$ID = NULL
 ```
 
-Data cleaning and selecting relevant features to research question.
+Data cleaning and selecting relevant features to research question. The outcome of interest, the CBCL scale assessing child internalizing and externalizing behaviors, was dichotomized at a cut-off of 60 which has been shown to be a clinically relevant score (Biederman et al., 1993).
 
 ```{r message = FALSE, warning = FALSE}
 studydata  = studydata %>% 
-  select(hs_as_m_Log2,
+  select(h_cereal_preg_Ter,
+         h_dairy_preg_Ter,
+         h_fastfood_preg_Ter,
+         h_fish_preg_Ter,
+         h_folic_t1_None,
+         h_fruit_preg_Ter,
+         h_legume_preg_Ter,
+         h_meat_preg_Ter,
+         hs_as_m_Log2,
          hs_cd_m_Log2,
          hs_co_m_Log2,
          hs_cs_m_Log2,
@@ -160,11 +169,8 @@ studydata  = studydata %>%
          hs_ohminp_madj_Log2,
          hs_oxominp_madj_Log2,
          hs_sumDEHP_madj_Log2,
+         e3_asmokcigd_p_None,
          hs_cotinine_mcat_None,
-         FAS_cat_None,
-         hs_contactfam_3cat_num_None,
-         hs_hm_pers_None,
-         hs_participation_3cat_None,
          hs_Gen_Tot
          ) 
 
@@ -187,14 +193,14 @@ missmap(studydata)
 # No missingness observed.
 
 # Exploring continuous/categorical variables of interest
-table.1 = tableby(~ behav + FAS_cat_None + hs_contactfam_3cat_num_None +
-                    hs_sumDEHP_madj_Log2 + hs_ohminp_madj_Log2 + hs_mibp_madj_Log2 + hs_mehp_madj_Log2,
+table.1 = tableby(~ behav + h_fastfood_preg_Ter + h_dairy_preg_Ter +
+                    h_meat_preg_Ter + hs_as_m_Log2 + hs_pfoa_m_Log2 + hs_cotinine_mcat_None,
                   data = data.rec,
         numeric.stats = c("mean","median", "range"))
 summary(table.1, text = TRUE)
 ```
 
-The data is unbalanced, which will be taken into account by down-sampling.
+Overall, 1301 participants are included in this dataset. Of those, 66 (5.1%) children scored above 60 on the CBCL scale, suggesting that they have internalizing and externalizing behaviors. The data is unbalanced, which will be taken into account by down-sampling.
 
 Partitioning data.
 
@@ -243,7 +249,7 @@ pred.lasso.prob.1 = predict(lasso.m1, training, type = "prob")
 eval.results = confusionMatrix(pred.lasso.1, training$behav, positive = "1")
 print(eval.results)
 
-#Accuracy of this model is 0.65
+#Accuracy of this model is 0.58
 ```
 
 ## Second Algorithm: Elastic Net
@@ -279,10 +285,12 @@ pred.en.prob = predict(en.m, training, type = "prob")
 eval.results = confusionMatrix(pred.en, training$behav, positive = "1")
 print(eval.results)
 
-#Accuracy of this model is 0.58
+#Accuracy of this model is 0.49
 ```
 
 Given that the LASSO model produced slightly better accuracy than the elastic net model, the LASSO model will be used for final accuracy testing.
+
+TALK ABOUT VARIABLE IMPORTANCE
 
 ### Final accuracy testing
 
@@ -298,7 +306,7 @@ eval.results = confusionMatrix(pred.lasso.f, testing$behav, positive = "1")
 print(eval.results)
 ```
 
-Final accuracy testing shows that the accuracy of the LASSO model is 0.62.
+Final accuracy testing shows that the accuracy of the LASSO model is 0.49. The LASSO model suggests that the most important variable is medium cereal consumption, followed by copper blood levels, medium meat consumption, high dairy consumption, and medium legume consumption. The elastic net model suggests that the most important variable is high legume consumption, high fish consumption, cesium blood levels, mercury blood levels, and high dairy consumption. Given that the LASSO model had greater accuracy, emphasis will be placed on those variables for future exploration. However, given that legume and dairy consumption were both among the top variables of importance in both the elastic net and LASSO models, there is support to explore these dietary components in greater detail.
 
 # Part 3: Ethical considerations of data-driven analysis in social epidemiology
 
@@ -312,17 +320,29 @@ The authors fail to report the average age of the participants, which would be i
 
 Additionally, the authors explain that they carried out study recruitment at two different time periods, as initial recruitment did not result in a sufficient number of participants. This is important given that one period of recruitment took place in the summer and the second took place in the fall. If participants are subject to seasonal depression, then higher rates of suicidal tweets may have been observed in the second set of participants. Unfortunately, the authors do not have the statistical power to stratify by recruitment period. Further, the authors excluded 77 participants without explanation for why these participants were excluded.
 
+[time component]
+
 They used a decision tree algorithm for feature selection and variable importance. When considering the quality of the analysis, the authors failed to describe how they split their data and whether they split 70/30. They also failed to describe whether and how they varied their hyperparameters, which would have been "cp" in this algorithm. They do mention that they used cross-validation, but don't mention what they set their cross-validation parameter as. Given the unbalanced nature of the data, they likely should have accounted for this; however, they don't describe whether they took this into account or not. 
 
 ## Question 2
+
+Two examples of using social media for research posing harm to communities:
 
 The authors conclude that tweets including "achieve" and those including "religion" are protective against suicidality. This could be challenging for interventions that are attempting to identify text that is predictive of suicidality. If this algorithm is implemented in real time, it could be harmful if users are flagged for suicidal behavior without actually exhibiting suicidal behavior. For example, were users to tweet about topics other than those trained on, they might be flagged. This could lead to self-fulfilling behavior, in that being told they are at risk of suicide actually places them at higher risk of suicide.
 
 Further, there exist disparities in internet access across the United States. Counties or neighborhoods could be identified as having users with high rates of suicide, or high rates of suicidal behavior, and resources could be funneled towards these neighborhoods. However, counties with lower internet access and fewer users may not be allocated these resources because they were not identified as having users with high suicide rates.
 
+[[rural settings!!]]
+
 ## Question 3
 
+opt in or opt out of this
+representative
+dont use social media as data source
 
+# References
+
+Biderman J, Faraone SV, Doyle A, Lehman BK, Kraus I, Perrin J, Tsuang MT. Convergence of the Child Behavior Checklist with structured interview-based psychiatric diagnoses of ADHD children with and without comorbidity. J Child Psychiat, 1993: 34(7); 1241-1251.
 
 
 
