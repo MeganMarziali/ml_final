@@ -299,3 +299,38 @@ print(eval.results)
 ```
 
 Final accuracy testing shows that the accuracy of the LASSO model is 0.62.
+
+# Part 3: Ethical considerations of data-driven analysis in social epidemiology
+
+## Question 1
+
+*Braithwaite et al*
+
+Overall, I do not think this paper is helpful in predicting early detection of suicidality. The paper that I've selected to analyze is the Braithwaite et al. paper predicting suicide from Twitter data. One thing that immediately stood out to me pertaining to the quality of analysis is the data quality. The authors describe recruiting through MTurk, which is Amazon's form of task deployment, where workers can sign up to do tasks for a negligible amount of money. As described in the paper, participants were paid the "market rate", which was a shocking 30-50 cents. Immediately, this should be cause for concern; people willing to participate in a study for a mere 30 cents are likely not representative of the general population. The study population could include a higher proportion of people struggling to make ends meet, and thus need an additional source of income, which could impact mental health and suicidality as a result of financial instability.
+
+The authors fail to report the average age of the participants, which would be important when understanding suicide, particularly as age is a risk factor for suicide. Additionally, the authors don't present information on sex. Men are at higher risk of suicide than women, and this information would have been important to present as well for understanding potential bias.
+
+Additionally, the authors explain that they carried out study recruitment at two different time periods, as initial recruitment did not result in a sufficient number of participants. This is important given that one period of recruitment took place in the summer and the second took place in the fall. If participants are subject to seasonal depression, then higher rates of suicidal tweets may have been observed in the second set of participants. Unfortunately, the authors do not have the statistical power to stratify by recruitment period. Further, the authors excluded 77 participants without explanation for why these participants were excluded.
+
+They used a decision tree algorithm for feature selection and variable importance. When considering the quality of the analysis, the authors failed to describe how they split their data and whether they split 70/30. They also failed to describe whether and how they varied their hyperparameters, which would have been "cp" in this algorithm. They do mention that they used cross-validation, but don't mention what they set their cross-validation parameter as. Given the unbalanced nature of the data, they likely should have accounted for this; however, they don't describe whether they took this into account or not. 
+
+## Question 2
+
+The authors conclude that tweets including "achieve" and those including "religion" are protective against suicidality. This could be challenging for interventions that are attempting to identify text that is predictive of suicidality. If this algorithm is implemented in real time, it could be harmful if users are flagged for suicidal behavior without actually exhibiting suicidal behavior. For example, were users to tweet about topics other than those trained on, they might be flagged. This could lead to self-fulfilling behavior, in that being told they are at risk of suicide actually places them at higher risk of suicide.
+
+Further, there exist disparities in internet access across the United States. Counties or neighborhoods could be identified as having users with high rates of suicide, or high rates of suicidal behavior, and resources could be funneled towards these neighborhoods. However, counties with lower internet access and fewer users may not be allocated these resources because they were not identified as having users with high suicide rates.
+
+## Question 3
+
+
+
+
+
+
+
+
+
+
+
+
+
