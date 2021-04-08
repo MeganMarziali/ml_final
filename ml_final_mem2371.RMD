@@ -312,37 +312,45 @@ Final accuracy testing shows that the accuracy of the LASSO model is 0.49. The L
 
 ## Question 1
 
-*Braithwaite et al*
+*Braithwaite SR, Giraud-Carrier C, West J, Barnes MD, Hanson CL. Validating machine learning algorithms for Twitter data against established measures of suicidality. JMIR Ment Health, 2016: 3(2): e21.*
 
-Overall, I do not think this paper is helpful in predicting early detection of suicidality. The paper that I've selected to analyze is the Braithwaite et al. paper predicting suicide from Twitter data. One thing that immediately stood out to me pertaining to the quality of analysis is the data quality. The authors describe recruiting through MTurk, which is Amazon's form of task deployment, where workers can sign up to do tasks for a negligible amount of money. As described in the paper, participants were paid the "market rate", which was a shocking 30-50 cents. Immediately, this should be cause for concern; people willing to participate in a study for a mere 30 cents are likely not representative of the general population. The study population could include a higher proportion of people struggling to make ends meet, and thus need an additional source of income, which could impact mental health and suicidality as a result of financial instability.
+### Quality of analysis 
 
-The authors fail to report the average age of the participants, which would be important when understanding suicide, particularly as age is a risk factor for suicide. Additionally, the authors don't present information on sex. Men are at higher risk of suicide than women, and this information would have been important to present as well for understanding potential bias.
+The paper that I've selected to analyze is the Braithwaite et al. (2016) paper predicting suicide from Twitter data. Overall, I do not think this paper is helpful in predicting early detection of suicidality. One thing that immediately stood out to me pertaining to the quality of analysis is the data quality. We’ve talked a lot in class about “garbage in, garbage out” and I think this paper is a good example of issues that arise when you use problematic data. Firstly, the authors explain that they carried out study recruitment at two different time periods, as initial recruitment did not result in a sufficient number of participants. This is important given that their exclusion criteria involved needing to tweet within the last month, and participants recruited in the initial stage could theoretically not have been included in the second phase. Unfortunately, the authors do not have the power to stratify by recruitment period or take into account any time component.
 
-Additionally, the authors explain that they carried out study recruitment at two different time periods, as initial recruitment did not result in a sufficient number of participants. This is important given that one period of recruitment took place in the summer and the second took place in the fall. If participants are subject to seasonal depression, then higher rates of suicidal tweets may have been observed in the second set of participants. Unfortunately, the authors do not have the statistical power to stratify by recruitment period. Further, the authors excluded 77 participants without explanation for why these participants were excluded.
+The authors also opted to use a decision tree algorithm for feature selection and variable importance. It would have been interesting to see how this compares to LASSO. The authors found that tweeting in the “achieve”, “religion” or “relativity” categories are predictive for being nonsuicidal. These seem very arbitrary, particularly since the “relativity” category is related to theories of relativity, and do not seem to be trustworthy features of importance when considering suicidality.
 
-[time component]
+### Bias
 
-They used a decision tree algorithm for feature selection and variable importance. When considering the quality of the analysis, the authors failed to describe how they split their data and whether they split 70/30. They also failed to describe whether and how they varied their hyperparameters, which would have been "cp" in this algorithm. They do mention that they used cross-validation, but don't mention what they set their cross-validation parameter as. Given the unbalanced nature of the data, they likely should have accounted for this; however, they don't describe whether they took this into account or not. 
+The authors describe recruiting through Mechanical Turk (MTurk), which is an Amazon-led form of task deployment where workers can sign up to do tasks for a negligible amount of money. As described in the paper, participants were paid the "market rate", which was a shocking 30-50 cents. Immediately, this should be cause for concern; people willing to participate in a study for a mere 30 cents are likely not representative of the general population or the average social media user in the US. Therefore, while the authors frame this study as being relevant for the US population, I don’t believe that is accurate.
+
+To understand potential bias, the authors should have presented more detailed sociodemographic characteristics. The authors fail to report the average age of the participants, which would be important when understanding suicide, particularly as age is a risk factor. Additionally, the authors don't present information on sex. As men are at higher risk of suicide than women, this information would have been important to present as well for understanding potential bias.
+
+
+## Details of methodology
+
+At the recruitment stage, the authors excluded 77 participants without explanation for why these participants were excluded. They do present some exclusion criteria, but it would have been more transparent to explain clearly why participants were excluded.
+
+The authors failed to describe how they split their data and whether they split 70/30. They also failed to describe whether and how they varied their hyperparameters, which would have been "cp" in this algorithm. They do mention that they used leave-one-out cross-validation, but don't mention what they set their cross-validation parameter as, and instead note that they repeated cross-validation N times. Lastly, they should have taken into account the unbalanced data but do not describe any approach in doing so.
 
 ## Question 2
 
-Two examples of using social media for research posing harm to communities:
+In this paper, the authors suggest creating some type of system that includes text messaging to reach individuals who the algorithm identify as being at risk of suicide. However, given that the algorithm identified somewhat arbitrary text and was trained on a small number of users, it seems that it may misidentify users at risk of suicide. If this algorithm is implemented in real time, it could be harmful if users are flagged for suicidal behavior without actually exhibiting suicidal behavior. This could lead to self-fulfilling behavior, in that being told they are at risk of suicide, or repeatedly reminded of suicide, actually places them at higher risk of suicide.
 
-The authors conclude that tweets including "achieve" and those including "religion" are protective against suicidality. This could be challenging for interventions that are attempting to identify text that is predictive of suicidality. If this algorithm is implemented in real time, it could be harmful if users are flagged for suicidal behavior without actually exhibiting suicidal behavior. For example, were users to tweet about topics other than those trained on, they might be flagged. This could lead to self-fulfilling behavior, in that being told they are at risk of suicide actually places them at higher risk of suicide.
-
-Further, there exist disparities in internet access across the United States. Counties or neighborhoods could be identified as having users with high rates of suicide, or high rates of suicidal behavior, and resources could be funneled towards these neighborhoods. However, counties with lower internet access and fewer users may not be allocated these resources because they were not identified as having users with high suicide rates.
-
-[[rural settings!!]]
+At an ecological level, there exist disparities in internet access across the United States. Counties or neighborhoods could be identified as having users with high rates of suicide, or high rates of suicidal behavior, and resources could be funneled towards these neighborhoods. Counties with lower internet access and fewer users, such as those in rural areas, may not be allocated resources because they were not identified as having users with high suicide rates. Given associations between rurality and suicide, this could be potentially harmful for rural communities who are in need of these resources.
 
 ## Question 3
 
-opt in or opt out of this
-representative
-dont use social media as data source
+Safeguards at the individual level would involve ensuring that users could opt-out of any possible intervention. By doing so, users would not be subject to unwanted text messages about potential suicidal behavior and avoid triggering social media users and putting them in an emotionally vulnerable state.
+
+At the policy level, safeguards should include not making funding decisions based solely from data collected via social media. Policymakers should be well-versed in understanding disparities in internet access, and should not consider allocating funding using results from analyses of social media.
+
 
 # References
 
 Biderman J, Faraone SV, Doyle A, Lehman BK, Kraus I, Perrin J, Tsuang MT. Convergence of the Child Behavior Checklist with structured interview-based psychiatric diagnoses of ADHD children with and without comorbidity. J Child Psychiat, 1993: 34(7); 1241-1251.
+
+Braithwaite SR, Giraud-Carrier C, West J, Barnes MD, Hanson CL. Validating machine learning algorithms for Twitter data against established measures of suicidality. JMIR Ment Health, 2016: 3(2): e21.
 
 
 
