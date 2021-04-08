@@ -1,7 +1,7 @@
 ---
 title: "Machine Learning Final"
 author: "Megan Marziali"
-date: "3/25/2021"
+date: "4/8/2021"
 output: word_document
 ---
 
@@ -86,7 +86,7 @@ input.feature.vals %>%
   knitr::kable()
 ```
 
-The first cluster has less cereal consumed during pregnancy by mothers than the second cluster; respondents also consumed slightly more dairy, fast food, and fish. Those in the second cluster consumed more cereal and slightly more fruit and meats. Both clusters consumed approximately the same amount of vegetables.
+The first cluster has less cereal consumed during pregnancy by mothers than the second cluster; respondents also consumed slightly more dairy, fast food, fish and legumes. Those in the second cluster consumed more cereal and slightly more fruit and meats. Both clusters consumed approximately the same amount of vegetables.
 
 # Part 2: Choose your own supervised adventure
 
@@ -290,16 +290,14 @@ print(eval.results)
 
 Given that the LASSO model produced slightly better accuracy than the elastic net model, the LASSO model will be used for final accuracy testing.
 
-TALK ABOUT VARIABLE IMPORTANCE
-
 ### Final accuracy testing
 
 ```{r message = FALSE, warning = FALSE}
 set.seed(100)
 
 # Using best fit model from above with testing data
-pred.lasso.f = predict(lasso.m.1, testing)
-pred.lasso.f.prob = predict(lasso.m.1, testing, type = "prob")
+pred.lasso.f = predict(lasso.m1, testing)
+pred.lasso.f.prob = predict(lasso.m1, testing, type = "prob")
 
 # Evaluating in testing data with confusion matrix
 eval.results = confusionMatrix(pred.lasso.f, testing$behav, positive = "1")
@@ -326,7 +324,6 @@ The authors describe recruiting through Mechanical Turk (MTurk), which is an Ama
 
 To understand potential bias, the authors should have presented more detailed sociodemographic characteristics. The authors fail to report the average age of the participants, which would be important when understanding suicide, particularly as age is a risk factor. Additionally, the authors don't present information on sex. As men are at higher risk of suicide than women, this information would have been important to present as well for understanding potential bias.
 
-
 ## Details of methodology
 
 At the recruitment stage, the authors excluded 77 participants without explanation for why these participants were excluded. They do present some exclusion criteria, but it would have been more transparent to explain clearly why participants were excluded.
@@ -344,7 +341,6 @@ At an ecological level, there exist disparities in internet access across the Un
 Safeguards at the individual level would involve ensuring that users could opt-out of any possible intervention. By doing so, users would not be subject to unwanted text messages about potential suicidal behavior and avoid triggering social media users and putting them in an emotionally vulnerable state.
 
 At the policy level, safeguards should include not making funding decisions based solely from data collected via social media. Policymakers should be well-versed in understanding disparities in internet access, and should not consider allocating funding using results from analyses of social media.
-
 
 # References
 
